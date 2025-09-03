@@ -20,6 +20,16 @@ class AuthController {
       res.status(401).json({ message: error.message });
     }
   }
+
+  async me(req, res) {
+    try {
+      // The protect middleware already put the user on req.user
+      // We can just return it directly
+      res.status(200).json(req.user);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }
 }
 
 export default new AuthController();

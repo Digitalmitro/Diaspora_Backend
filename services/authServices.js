@@ -41,6 +41,7 @@ class AuthService {
 
     return { message: "User logged in successfully", token, user };
   }
+  
 }
 
 export default new AuthService();
