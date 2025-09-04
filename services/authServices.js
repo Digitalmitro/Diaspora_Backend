@@ -13,7 +13,7 @@ class AuthService {
     const newUser = new User({
       name,
       email,
-      password: hashedPassword, 
+      password: hashedPassword,
       role,
     });
 
@@ -21,7 +21,16 @@ class AuthService {
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
-    return { message: "User created successfully", token, newUser };
+    return {
+      message: "User created successfully",
+      token,
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    };
   }
 
   async login({ email, password }) {
@@ -41,7 +50,6 @@ class AuthService {
 
     return { message: "User logged in successfully", token, user };
   }
-  
 }
 
 export default new AuthService();
