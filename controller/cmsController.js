@@ -3,7 +3,15 @@ import cmsService from "../services/cmsService.js";
 class CMSController {
   async createPage(req, res) {
     try {
-      const page = await cmsService.createPage(req.body);
+        const data = req.body;
+      if (req.files?.banner) {
+        data.banner = req.files.banner[0].path; 
+      }
+      if (req.files?.secondaryImage) {
+        data.secondaryImage = req.files.secondaryImage[0].path; 
+      }
+      const page = await cmsService.createPage(data);
+      console.log(data)
       res.status(201).json(page);
     } catch (err) {
       res.status(500).json({ message: err.message });
