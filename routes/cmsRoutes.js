@@ -9,6 +9,8 @@ router.post(
   upload.fields([
     { name: "banner", maxCount: 1 },
     { name: "secondaryImage", maxCount: 1 },
+    { name: "home[bannerSection][bannerImage]", maxCount: 1 },
+    { name: "home[secondBannerSection][bannerImage]", maxCount: 1 },
   ]),
   cmsController.createPage
 );

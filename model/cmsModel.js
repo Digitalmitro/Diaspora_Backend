@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const CMSPageSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
-  title: { type: String, required: true },
+  title: { type: String},
   content: { type: String },
 
   banner: { type: String },

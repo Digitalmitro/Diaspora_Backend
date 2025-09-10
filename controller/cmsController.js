@@ -2,21 +2,40 @@ import cmsService from "../services/cmsService.js";
 
 class CMSController {
   async createPage(req, res) {
-    try {
-        const data = req.body;
-      if (req.files?.banner) {
-        data.banner = req.files.banner[0].path; 
-      }
-      if (req.files?.secondaryImage) {
-        data.secondaryImage = req.files.secondaryImage[0].path; 
-      }
-      const page = await cmsService.createPage(data);
-      console.log(data)
-      res.status(201).json(page);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
+  try {
+    const data = req.body;
+
+    // Top-level fields
+    if (req.files?.banner) {
+      data.banner = req.files.banner[0].path; 
     }
+    if (req.files?.secondaryImage) {
+      data.secondaryImage = req.files.secondaryImage[0].path; 
+    }
+
+    // Nested home.bannerSection.bannerImage
+    if (req.files?.['home[bannerSection][bannerImage]']) {
+      data.home = data.home || {};
+      data.home.bannerSection = data.home.bannerSection || {};
+      data.home.bannerSection.bannerImage =
+        req.files['home[bannerSection][bannerImage]'][0].path;
+    }
+
+    // Nested home.secondBannerSection.bannerImage
+    if (req.files?.['home[secondBannerSection][bannerImage]']) {
+      data.home = data.home || {};
+      data.home.secondBannerSection = data.home.secondBannerSection || {};
+      data.home.secondBannerSection.bannerImage =
+        req.files['home[secondBannerSection][bannerImage]'][0].path;
+    }
+
+    const page = await cmsService.createPage(data);
+    res.status(201).json(page);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
+}
+
 
   async updatePage(req, res) {
     try {
