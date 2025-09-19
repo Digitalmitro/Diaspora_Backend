@@ -51,6 +51,7 @@ class CMSController {
   async getPage(req, res) {
     try {
       const { slug } = req.params;
+       console.log("Requested slug:", slug);
       const page = await cmsService.getPage(slug);
       if (!page) return res.status(404).json({ message: "Page not found" });
       res.json(page);
