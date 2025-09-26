@@ -37,17 +37,31 @@ class CMSController {
 }
 
 
-  async updatePage(req, res) {
-    try {
-      const { slug } = req.params;
-      const page = await cmsService.updatePage(slug, req.body);
-      if (!page) return res.status(404).json({ message: "Page not found" });
-      res.json(page);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  }
+async updatePage(req, res) {
+  try {
+    const { slug } = req.params;
+    const data = req.body; // Contains text fields (e.g., title, content, home[section][key])
+    const files = req.files; // Contains files (e.g., banner, secondaryImage)
 
+    console.log("Slug:", slug);
+    console.log("Body:", data);
+    console.log("Files:", files);
+
+    // Process files if they exist
+    if (files.banner) {
+      data.banner = files.banner[0]; // Handle file (e.g., save to cloud or disk)
+    }
+    if (files.secondaryImage) {
+      data.secondaryImage = files.secondaryImage[0]; // Handle file
+    }
+
+    const page = await cmsService.updatePage(slug, data);
+    if (!page) return res.status(404).json({ message: "Page not found" });
+    res.json(page);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
   async getPage(req, res) {
     try {
       const { slug } = req.params;

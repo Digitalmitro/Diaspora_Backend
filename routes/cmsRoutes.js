@@ -14,7 +14,16 @@ router.post(
   ]),
   cmsController.createPage
 );
-router.put("/:slug", cmsController.updatePage);
+router.put(
+  "/:slug",
+  upload.fields([
+    { name: "banner", maxCount: 1 },
+    { name: "secondaryImage", maxCount: 1 },
+    { name: "home[bannerSection][bannerImage]", maxCount: 1 },
+    { name: "home[secondBannerSection][bannerImage]", maxCount: 1 },
+  ]),
+  cmsController.updatePage
+);
 
 // Public or admin
 router.get("/", cmsController.getAllPages);
