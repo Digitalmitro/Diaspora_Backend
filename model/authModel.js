@@ -21,13 +21,25 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "employer", "seeker"],
-      default: "seeker",
+      enum: ["jobseeker", "employer", "admin"],
+      default: "jobseeker",
     },
     isVerified: {
       type: Boolean,
       default: false,
-    }
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    verificationToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

@@ -1,5 +1,5 @@
-import jwt from "jsonwebtoken";
-import User from "../model/authModel.js"
+import User from "../model/authModel.js";
+import { verifyAuthToken } from "../services/authUtils.js";
 
 // This is the middleware function itself - your BOUNCER
 const protect = async (req, res, next) => {
@@ -13,12 +13,12 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // 2. Verify the token (The bouncer checking if the wristband is real)
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = verifyAuthToken(token);
 
       // 3. Find the user from the token payload and attach them to the request object
       // This is crucial! The route handler now knows who made the request.
       // We select everything except the password (-password)
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded._id).select('-password');
 
       // 4. If all is good, call next() to let the request proceed to the route
       next();

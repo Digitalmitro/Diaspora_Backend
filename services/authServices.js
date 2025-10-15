@@ -1,6 +1,5 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import User from "../model/authModel.js";
+import { hashPassword, comparePassword, generateAuthToken } from "../utils/authUtils.js";
 
 class AuthService {
   async signup({ name, email, password, role }) {
@@ -9,7 +8,7 @@ class AuthService {
       throw new Error("User already exists");
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
     const newUser = new User({
       name,
       email,
@@ -18,9 +17,7 @@ class AuthService {
     });
 
     await newUser.save();
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    const token = generateAuthToken(newUser);
     return {
       message: "User created successfully",
       token,
@@ -39,14 +36,12 @@ class AuthService {
       throw new Error("Invalid email or password");
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await comparePassword(password, user.password);
     if (!isMatch) {
       throw new Error("Invalid email or password");
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    const token = generateAuthToken(user);
 
     return { message: "User logged in successfully", token, user };
   }
