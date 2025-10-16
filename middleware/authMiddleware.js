@@ -1,5 +1,5 @@
 import User from "../model/authModel.js";
-import { verifyAuthToken } from "../services/authUtils.js";
+import { verifyAuthToken } from "../utils/authUtils.js";
 
 // This is the middleware function itself - your BOUNCER
 const protect = async (req, res, next) => {
