@@ -1,9 +1,10 @@
 import express from "express";
 import cmsController from "../controller/cmsController.js";
 import upload from "../middleware/upload.js";
+import { createPageValidation, updatePageValidation, getPageValidation } from "../validators/cms.validator.js";
+
 const router = express.Router();
 
-// Admin will use these
 router.post(
   "/",
   upload.fields([
@@ -12,8 +13,10 @@ router.post(
     { name: "home[bannerSection][bannerImage]", maxCount: 1 },
     { name: "home[secondBannerSection][bannerImage]", maxCount: 1 },
   ]),
+  createPageValidation,
   cmsController.createPage
 );
+
 router.put(
   "/:slug",
   upload.fields([
@@ -22,11 +25,11 @@ router.put(
     { name: "home[bannerSection][bannerImage]", maxCount: 1 },
     { name: "home[secondBannerSection][bannerImage]", maxCount: 1 },
   ]),
+  updatePageValidation,
   cmsController.updatePage
 );
 
-// Public or admin
 router.get("/", cmsController.getAllPages);
-router.get("/:slug", cmsController.getPage);
+router.get("/:slug", getPageValidation, cmsController.getPage);
 
 export default router;

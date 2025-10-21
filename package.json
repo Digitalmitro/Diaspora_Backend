@@ -1,18 +1,28 @@
 {
   "name": "diaspora_backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Diaspora Backend API - Job portal connecting job seekers and employers globally",
   "main": "index.js",
   "scripts": {
-    "test": "node Tests/testModels.js",
-    "test:quick": "node Tests/quickTest.js",
-    "test:validate": "node Tests/testValidations.js",
-    "start": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "NODE_ENV=test node Tests/runAll.js",
+    "test:auth": "NODE_ENV=test mocha Tests/auth.model.test.js --timeout 10000 --exit",
+    "test:cms": "NODE_ENV=test mocha Tests/cms.model.test.js --timeout 10000 --exit",
+    "test:job": "NODE_ENV=test mocha Tests/job.model.test.js --timeout 10000 --exit",
+    "test:application": "NODE_ENV=test mocha Tests/application.model.test.js --timeout 10000 --exit",
+    "test:blog": "NODE_ENV=test mocha Tests/blog.model.test.js --timeout 10000 --exit",
+    "test:subscription": "NODE_ENV=test mocha Tests/subscription.model.test.js --timeout 10000 --exit",
+    "test:testimonial": "NODE_ENV=test mocha Tests/testimonial.model.test.js --timeout 10000 --exit",
+    "test:faq": "NODE_ENV=test mocha Tests/faq.model.test.js --timeout 10000 --exit",
+    "test:payment": "NODE_ENV=test mocha Tests/payment.model.test.js --timeout 10000 --exit"
   },
   "keywords": [
-    "Diaspora"
+    "Diaspora",
+    "Job Portal",
+    "Backend API"
   ],
-  "author": "",
+  "author": "Diaspora Team",
   "license": "ISC",
   "type": "module",
   "dependencies": {
@@ -21,18 +31,22 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^7.0.9",
+    "winston": "^3.18.3",
+    "xss-clean": "^0.1.4"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
-    "eslint": "^9.37.0",
-    "nodemon": "^3.1.10",
-    "prettier": "^3.6.2"
+    "chai": "^4.3.10",
+    "chai-http": "^4.4.0",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.1.10"
   }
 }

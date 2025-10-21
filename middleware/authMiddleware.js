@@ -1,40 +1,96 @@
 import User from "../model/authModel.js";
+import UserMetadata from "../model/userMetadataModel.js";
 import { verifyAuthToken } from "../utils/authUtils.js";
+import logger from "../config/logger.js";
 
-// This is the middleware function itself - your BOUNCER
 const protect = async (req, res, next) => {
   let token;
 
-  // 1. Check for the token in the headers (the bouncer looking for a wristband)
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    // Format is: "Bearer <actual_token>"
-    try {
-      // Extract just the token from the string
-      token = req.headers.authorization.split(' ')[1];
-
-      // 2. Verify the token (The bouncer checking if the wristband is real)
+  try {
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
       const decoded = verifyAuthToken(token);
 
-      // 3. Find the user from the token payload and attach them to the request object
-      // This is crucial! The route handler now knows who made the request.
-      // We select everything except the password (-password)
-      req.user = await User.findById(decoded._id).select('-password');
+      req.user = await User.findById(decoded._id).select("-password");
 
-      // 4. If all is good, call next() to let the request proceed to the route
+      if (!req.user) {
+        logger.warn("Authentication failed: User not found", {
+          userId: decoded._id,
+          ip: req.ip,
+          path: req.path,
+        });
+        return res.status(401).json({ message: "Not authorized, user not found" });
+      }
+
+      logger.info("Authentication successful", {
+        userId: req.user._id,
+        email: req.user.email,
+        role: req.user.role,
+        ip: req.ip,
+        path: req.path,
+      });
+
+      let userMetadata = await UserMetadata.findOne({ userId: req.user._id });
+      if (!userMetadata) {
+        userMetadata = await UserMetadata.create({ userId: req.user._id });
+      }
+      await userMetadata.updateActivity();
+
       next();
 
-    } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: "Not authorized, token failed" });
-      return; // Always return after sending a response to stop execution
+    } else {
+      logger.warn("Authentication failed: No token provided", {
+        ip: req.ip,
+        path: req.path,
+      });
+      return res.status(401).json({ message: "Not authorized, no token" });
     }
-  }
 
-  // 5. If there's no token at all
-  if (!token) {
-    res.status(401).json({ message: "Not authorized, no token" });
-    return;
+  } catch (error) {
+    logger.error("Authentication failed: Invalid token", {
+      error: error.message,
+      ip: req.ip,
+      path: req.path,
+    });
+    return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
 
-export { protect };
+const optionalAuth = async (req, res, next) => {
+  let token;
+
+  try {
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+      token = req.headers.authorization.split(" ")[1];
+      const decoded = verifyAuthToken(token);
+
+      req.user = await User.findById(decoded._id).select("-password");
+
+      if (req.user) {
+        logger.info("Optional authentication successful", {
+          userId: req.user._id,
+          email: req.user.email,
+          role: req.user.role,
+          ip: req.ip,
+          path: req.path,
+        });
+
+        let userMetadata = await UserMetadata.findOne({ userId: req.user._id });
+        if (!userMetadata) {
+          userMetadata = await UserMetadata.create({ userId: req.user._id });
+        }
+        await userMetadata.updateActivity();
+      }
+    }
+  } catch (error) {
+    logger.debug("Optional authentication: Invalid or missing token", {
+      error: error.message,
+      ip: req.ip,
+      path: req.path,
+    });
+  }
+
+  next();
+};
+
+export { protect, optionalAuth };

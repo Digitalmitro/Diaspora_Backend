@@ -1,88 +1,54 @@
 import cmsService from "../services/cmsService.js";
+import { catchAsync } from "../utils/catchAsync.js";
+import { apiSuccessResponse, HTTP_STATUS, HTTP_STATUS_MESSAGE } from "../utils/apiResponse.js";
+import { NotFoundException, InternalServerException } from "../utils/ErrorResponse.js";
 
 class CMSController {
-  async createPage(req, res) {
-  try {
+  createPage = catchAsync(async (req, res) => {
     const data = req.body;
 
-    // Top-level fields
-    if (req.files?.banner) {
-      data.banner = req.files.banner[0].path; 
-    }
-    if (req.files?.secondaryImage) {
-      data.secondaryImage = req.files.secondaryImage[0].path; 
-    }
-
-    // Nested home.bannerSection.bannerImage
+    if (req.files?.banner) data.banner = req.files.banner[0].path;
+    if (req.files?.secondaryImage) data.secondaryImage = req.files.secondaryImage[0].path;
     if (req.files?.['home[bannerSection][bannerImage]']) {
       data.home = data.home || {};
       data.home.bannerSection = data.home.bannerSection || {};
-      data.home.bannerSection.bannerImage =
-        req.files['home[bannerSection][bannerImage]'][0].path;
+      data.home.bannerSection.bannerImage = req.files['home[bannerSection][bannerImage]'][0].path;
     }
-
-    // Nested home.secondBannerSection.bannerImage
     if (req.files?.['home[secondBannerSection][bannerImage]']) {
       data.home = data.home || {};
       data.home.secondBannerSection = data.home.secondBannerSection || {};
-      data.home.secondBannerSection.bannerImage =
-        req.files['home[secondBannerSection][bannerImage]'][0].path;
+      data.home.secondBannerSection.bannerImage = req.files['home[secondBannerSection][bannerImage]'][0].path;
     }
 
     const page = await cmsService.createPage(data);
-    res.status(201).json(page);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-}
+    if (!page) throw new InternalServerException("Failed to create page");
+    apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.CREATED], page, HTTP_STATUS.CREATED);
+  });
 
-
-async updatePage(req, res) {
-  try {
+  updatePage = catchAsync(async (req, res) => {
     const { slug } = req.params;
-    const data = req.body; // Contains text fields (e.g., title, content, home[section][key])
-    const files = req.files; // Contains files (e.g., banner, secondaryImage)
+    const data = req.body;
+    const files = req.files;
 
-    console.log("Slug:", slug);
-    console.log("Body:", data);
-    console.log("Files:", files);
-
-    // Process files if they exist
-    if (files.banner) {
-      data.banner = files.banner[0]; // Handle file (e.g., save to cloud or disk)
-    }
-    if (files.secondaryImage) {
-      data.secondaryImage = files.secondaryImage[0]; // Handle file
-    }
+    if (files?.banner) data.banner = files.banner[0];
+    if (files?.secondaryImage) data.secondaryImage = files.secondaryImage[0];
 
     const page = await cmsService.updatePage(slug, data);
-    if (!page) return res.status(404).json({ message: "Page not found" });
-    res.json(page);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-}
-  async getPage(req, res) {
-    try {
-      const { slug } = req.params;
-       console.log("Requested slug:", slug);
-      const page = await cmsService.getPage(slug);
-      if (!page) return res.status(404).json({ message: "Page not found" });
-      res.json(page);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  }
+    if (!page) throw new NotFoundException("Page not found");
+    apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.OK], page, HTTP_STATUS.OK);
+  });
 
-  async getAllPages(req, res) {
-    try {
-      const pages = await cmsService.getAllPages();
-      res.json(pages);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  }
+  getPage = catchAsync(async (req, res) => {
+    const { slug } = req.params;
+    const page = await cmsService.getPage(slug);
+    if (!page) throw new NotFoundException("Page not found");
+    apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.OK], page, HTTP_STATUS.OK);
+  });
 
+  getAllPages = catchAsync(async (_req, res) => {
+    const pages = await cmsService.getAllPages();
+    apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.OK], pages, HTTP_STATUS.OK);
+  });
 }
 
 export default new CMSController();

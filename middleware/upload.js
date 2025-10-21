@@ -5,7 +5,7 @@ import cloudinary from "../config/cloudinary.js";
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "cms_uploads", // all uploads will go inside this folder
+    folder: "cms_uploads",
     allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });

@@ -1,14 +1,13 @@
 import mongoose from "mongoose";
+import { ModelNames } from "./modelNames.js";
+import softDeletePlugin from "../plugins/softDelete.plugin.js";
 
 const CMSPageSchema = new mongoose.Schema({
-  slug: { type: String, required: true, unique: true },
-  title: { type: String},
+  slug: { type: String, required: true, unique: true, index: true },
+  title: { type: String },
   content: { type: String },
-
   banner: { type: String },
-
   secondaryImage: { type: String },
-
   home: {
     bannerSection: {
       bannerImage: { type: String },
@@ -32,8 +31,10 @@ const CMSPageSchema = new mongoose.Schema({
       description: { type: String }
     }
   },
-
   updatedAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model("CMSPage", CMSPageSchema);
+CMSPageSchema.plugin(softDeletePlugin);
+
+export const CMSModel = mongoose.model(ModelNames.CMS, CMSPageSchema);
+export default CMSModel;

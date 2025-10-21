@@ -16,6 +16,6 @@ class CMSService {
   async getAllPages() {
     return await CMSPage.find();
   }
-
 }
+
 export default new CMSService();

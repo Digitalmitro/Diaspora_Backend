@@ -11,10 +11,10 @@
   "rules": {
     "indent": ["error", 2],
     "linebreak-style": ["error", "unix"],
-    "quotes": ["error", "single"],
+    "quotes": ["error", "double"],
     "semi": ["error", "always"],
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": "off",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
     "no-undef": "error",
     "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 0 }],
     "comma-dangle": ["error", "only-multiline"],

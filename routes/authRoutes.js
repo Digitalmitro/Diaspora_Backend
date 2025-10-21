@@ -1,10 +1,18 @@
 import { Router } from "express";
 import AuthController from "../controller/AuthController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, optionalAuth } from "../middleware/authMiddleware.js";
+import { authRateLimiter, strictRateLimiter, } from "../middleware/rateLimitMiddleware.js";
+import { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, verifyEmailValidation, } from "../validators/auth.validator.js";
+
 const router = Router();
 
-router.post("/signup", (req, res) => AuthController.signup(req, res));
-router.post("/login", (req, res) => AuthController.login(req, res));
-router.get("/me", protect, (req, res) => AuthController.me(req, res));
+router.post("/signup", authRateLimiter, optionalAuth, registerValidation, AuthController.register);
+router.post("/login", authRateLimiter, loginValidation, AuthController.login);
+router.post("/verify-email", verifyEmailValidation, AuthController.verifyEmail);
+router.post("/forgot-password", strictRateLimiter, forgotPasswordValidation, AuthController.forgotPassword);
+router.post("/reset-password", strictRateLimiter, resetPasswordValidation, AuthController.resetPassword);
+
+router.get("/me", protect, AuthController.getCurrentUser);
+router.post("/logout", protect, AuthController.logout);
 
 export default router;
