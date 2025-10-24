@@ -5,7 +5,7 @@ import { TestimonialModel } from "../model/testimonialModel.js";
 import { PartnerModel } from "../model/partnerModel.js";
 import { FAQModel } from "../model/faqModel.js";
 import { apiSuccessResponse, apiErrorResponse, HTTP_STATUS } from "../utils/apiResponseUtils.js";
-import catchAsync from "../utils/catchAsyncUtils.js";
+import { catchAsync } from "../utils/catchAsyncUtils.js";
 
 export const searchJobs = catchAsync(async (req, res) => {
     const { title, location, skills, jobType, page = 1, limit = 10 } = req.query;

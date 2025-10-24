@@ -14,5 +14,6 @@ router.post("/reset-password", strictRateLimiter, resetPasswordValidation, AuthC
 
 router.get("/me", protect, AuthController.getCurrentUser);
 router.post("/logout", protect, AuthController.logout);
+router.put("/update-profile", protect, AuthController.updateProfile);
 
 export default router;

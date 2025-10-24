@@ -208,7 +208,7 @@ const getSkillRecommendations = (jobSkills, applicantSkills, targetPercentage = 
     };
 };
 
-module.exports = {
+export {
     normalizeSkill,
     areSkillsSimilar,
     extractSkills,

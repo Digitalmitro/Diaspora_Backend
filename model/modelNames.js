@@ -5,6 +5,7 @@ export const ModelNames = Object.freeze({
   EMPLOYER_PROFILE: "EmployerProfile",
   JOB: "Job",
   JOB_ALERT: "JobAlert",
+  SAVED_JOB: "SavedJob",
   APPLICATION: "Application",
   SUBSCRIPTION_PLAN: "SubscriptionPlan",
   SUBSCRIPTION: "Subscription",

@@ -11,7 +11,11 @@ import {
     addExperience,
     addEducation,
     updateExperience,
-    deleteExperience
+    deleteExperience,
+    updateEducation,
+    deleteEducation,
+    getDashboardStats,
+    getRecommendedJobs
 } from '../controller/jobseekerController.js';
 import {
     profileUpdateValidation,
@@ -25,6 +29,10 @@ const router = Router();
 
 router.use(protect);
 router.use(isJobSeeker);
+
+router.get('/dashboard/stats', getDashboardStats);
+
+router.get('/recommended-jobs', getRecommendedJobs);
 
 router.get('/profile', getProfile);
 
@@ -43,5 +51,9 @@ router.post('/education', educationValidation, addEducation);
 router.put('/experience/:id', idParamValidation, experienceValidation, updateExperience);
 
 router.delete('/experience/:id', idParamValidation, deleteExperience);
+
+router.put('/education/:id', idParamValidation, educationValidation, updateEducation);
+
+router.delete('/education/:id', idParamValidation, deleteEducation);
 
 export default router;

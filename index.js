@@ -8,6 +8,10 @@ import logger from "./config/logger.js";
 import authRoutes from "./routes/authRoutes.js";
 import cmsRoutes from "./routes/cmsRoutes.js";
 import jobseekerRoutes from "./routes/jobseekerRoutes.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js";
+import savedJobRoutes from "./routes/savedJobRoutes.js";
+import jobAlertRoutes from "./routes/jobAlertRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandlerMiddleware.js";
 import { generalRateLimiter } from "./middleware/rateLimitMiddleware.js";
 import { httpsRedirect, securityHeaders } from "./middleware/securityMiddleware.js";
@@ -77,6 +81,10 @@ app.use(generalRateLimiter);
 app.use("/auth", authRoutes);
 app.use("/cms", cmsRoutes);
 app.use("/seeker", jobseekerRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/public", publicRoutes);
+app.use("/api/saved-jobs", savedJobRoutes);
+app.use("/api/job-alerts", jobAlertRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({ 

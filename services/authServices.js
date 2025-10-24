@@ -292,6 +292,56 @@ class AuthService {
       message: "Password reset successful! You can now login with your new password.",
     };
   }
+
+  async updateUserProfile(userId, updates, ip) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new BadRequestException("User not found");
+    }
+
+    if (updates.email && updates.email !== user.email) {
+      const existingUser = await User.findOne({ email: updates.email });
+      if (existingUser) {
+        throw new BadRequestException("Email is already in use");
+      }
+      
+      user.email = updates.email;
+      user.isVerified = false;
+      
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const userMetadata = await UserMetadata.findOne({ userId: user._id });
+      if (userMetadata) {
+        await userMetadata.setVoidVariable('verificationToken', verificationToken);
+      }
+      
+      try {
+        await sendVerificationEmail(updates.email, verificationToken);
+        logger.info("Verification email sent for new email", { 
+          userId: user._id, 
+          newEmail: updates.email 
+        });
+      } catch (emailError) {
+        logger.error("Failed to send verification email", {
+          userId: user._id,
+          error: emailError.message,
+        });
+      }
+    }
+
+    if (updates.name) {
+      user.name = updates.name;
+    }
+
+    await user.save();
+
+    logger.info("User profile updated", {
+      userId: user._id,
+      email: user.email,
+      ip,
+    });
+
+    return user;
+  }
 }
 
 export default new AuthService();

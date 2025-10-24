@@ -73,6 +73,21 @@ class AuthController {
     };
     apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.OK], userData, HTTP_STATUS.OK);
   });
+
+  updateProfile = catchAsync(async (req, res) => {
+    const { name, email } = req.body;
+    const user = await AuthService.updateUserProfile(req.user._id, { name, email }, req.ip);
+    
+    logger.info("User profile updated", { userId: req.user._id, email: user.email });
+    
+    apiSuccessResponse(res, "Profile updated successfully", {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+    }, HTTP_STATUS.OK);
+  });
 }
 
 export default new AuthController();

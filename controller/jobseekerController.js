@@ -1,10 +1,18 @@
 import JobSeekerProfile from '../model/jobSeekerProfileModel.js';
 import Experience from '../model/experienceModel.js';
+import { ApplicationModel } from '../model/applicationModel.js';
+import { SavedJobModel } from '../model/savedJobModel.js';
+import { JobAlertModel } from '../model/jobAlertModel.js';
+import { JobModel } from '../model/jobModel.js';
 import dbService from '../services/dbServices.js';
 import { uploadFile, deleteFile } from '../utils/fileUploadUtils.js';
 import { catchAsync } from '../utils/catchAsyncUtils.js';
 import ErrorResponse from '../utils/ErrorResponseUtils.js';
 import { apiSuccessResponse } from '../utils/apiResponseUtils.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { calculateSkillsMatch } = require('../utils/skillsMatcherUtils.js');
 
 const getProfile = catchAsync(async (req, res, next) => {
     const profile = await JobSeekerProfile.findOne({ userId: req.user._id })
@@ -240,6 +248,194 @@ const deleteExperience = catchAsync(async (req, res, next) => {
     return apiSuccessResponse(res, 'Experience deleted successfully', null);
 });
 
+const updateEducation = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+
+    const profile = await JobSeekerProfile.findOne({ userId: req.user._id });
+
+    if (!profile) {
+        return next(new ErrorResponse('JobSeekerProfile not found', 404));
+    }
+
+    const educationIndex = profile.education.findIndex(
+        edu => edu._id.toString() === id
+    );
+
+    if (educationIndex === -1) {
+        return next(new ErrorResponse('Education not found', 404));
+    }
+
+    const allowedFields = ['degree', 'institution', 'fieldOfStudy', 'startDate', 'endDate', 'currentlyStudying', 'grade'];
+    
+    allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+            profile.education[educationIndex][field] = req.body[field];
+        }
+    });
+
+    await profile.save();
+
+    return apiSuccessResponse(
+        res,
+        'Education updated successfully',
+        profile.education[educationIndex]
+    );
+});
+
+const deleteEducation = catchAsync(async (req, res, next) => {
+    const { id } = req.params;
+
+    const profile = await JobSeekerProfile.findOne({ userId: req.user._id });
+
+    if (!profile) {
+        return next(new ErrorResponse('JobSeekerProfile not found', 404));
+    }
+
+    const educationIndex = profile.education.findIndex(
+        edu => edu._id.toString() === id
+    );
+
+    if (educationIndex === -1) {
+        return next(new ErrorResponse('Education not found', 404));
+    }
+
+    profile.education.splice(educationIndex, 1);
+    await profile.save();
+
+    return apiSuccessResponse(res, 'Education deleted successfully', null);
+});
+
+const getDashboardStats = catchAsync(async (req, res, next) => {
+    const jobSeekerId = req.user._id;
+
+    const profile = await JobSeekerProfile.findOne({ userId: jobSeekerId });
+
+    if (!profile) {
+        return next(new ErrorResponse('JobSeekerProfile not found', 404));
+    }
+
+    let completionScore = 0;
+    const totalFields = 7;
+    
+    if (profile.fullName) completionScore++;
+    if (profile.phone) completionScore++;
+    if (profile.bio) completionScore++;
+    if (profile.resume?.url) completionScore++;
+    if (profile.skills && profile.skills.length > 0) completionScore++;
+    if (profile.experiences && profile.experiences.length > 0) completionScore++;
+    if (profile.education && profile.education.length > 0) completionScore++;
+    
+    const profileCompletion = Math.round((completionScore / totalFields) * 100);
+
+    const [
+        totalApplications,
+        activeApplications,
+        shortlistedApplications,
+        interviewingApplications,
+        savedJobsCount,
+        jobAlertsCount,
+        recentApplications
+    ] = await Promise.all([
+        ApplicationModel.countDocuments({ jobSeekerId, isDeleted: false }),
+        ApplicationModel.countDocuments({ 
+            jobSeekerId, 
+            status: { $in: ['applied', 'shortlisted', 'interviewed'] },
+            isDeleted: false 
+        }),
+        ApplicationModel.countDocuments({ jobSeekerId, status: 'shortlisted', isDeleted: false }),
+        ApplicationModel.countDocuments({ jobSeekerId, status: 'interviewed', isDeleted: false }),
+        SavedJobModel.countDocuments({ jobSeekerId, isDeleted: false }),
+        JobAlertModel.countDocuments({ jobSeekerId, isDeleted: false }),
+        ApplicationModel.find({ jobSeekerId, isDeleted: false })
+            .populate('jobId', 'title department location status')
+            .sort({ appliedAt: -1 })
+            .limit(5)
+    ]);
+
+    return apiSuccessResponse(res, 'Dashboard stats retrieved successfully', {
+        stats: {
+            totalApplications,
+            activeApplications,
+            shortlistedApplications,
+            interviewsScheduled: interviewingApplications,
+            savedJobs: savedJobsCount,
+            jobAlerts: jobAlertsCount,
+            profileCompletion
+        },
+        recentApplications
+    });
+});
+
+const getRecommendedJobs = catchAsync(async (req, res, next) => {
+    const jobSeekerId = req.user._id;
+    const { page = 1, limit = 10 } = req.query;
+
+    const profile = await JobSeekerProfile.findOne({ userId: jobSeekerId });
+
+    if (!profile) {
+        return next(new ErrorResponse('JobSeekerProfile not found', 404));
+    }
+
+    const query = { status: 'active', isDeleted: false };
+
+    if (profile.skills && profile.skills.length > 0) {
+        query['skills.name'] = { 
+            $in: profile.skills.map(s => new RegExp(s, 'i')) 
+        };
+    }
+
+    if (profile.preferredLocations && profile.preferredLocations.length > 0) {
+        query.$or = [
+            { location: { $in: profile.preferredLocations.map(loc => new RegExp(loc, 'i')) } },
+            { isRemote: true }
+        ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const appliedJobIds = await ApplicationModel.find({ 
+        jobSeekerId, 
+        isDeleted: false 
+    }).distinct('jobId');
+
+    query._id = { $nin: appliedJobIds };
+
+    const [jobs, total] = await Promise.all([
+        JobModel.find(query)
+            .select('title department description location isRemote experienceRequired skills education salary jobType openings isFeatured createdAt')
+            .populate('employerId', 'name')
+            .sort({ isFeatured: -1, createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit)),
+        JobModel.countDocuments(query)
+    ]);
+
+    const jobsWithMatch = jobs.map(job => {
+        const jobSkills = job.skills?.map(s => s.name) || [];
+        const candidateSkills = profile.skills || [];
+        const matchResult = calculateSkillsMatch(jobSkills, candidateSkills);
+
+        return {
+            ...job.toObject(),
+            skillsMatchPercentage: matchResult.matchPercentage || 0,
+            matchedSkills: matchResult.matchedSkills || [],
+            missingSkills: matchResult.missingSkills || []
+        };
+    });
+
+    jobsWithMatch.sort((a, b) => b.skillsMatchPercentage - a.skillsMatchPercentage);
+
+    return apiSuccessResponse(res, 'Recommended jobs retrieved successfully', {
+        jobs: jobsWithMatch,
+        pagination: {
+            total,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            pages: Math.ceil(total / parseInt(limit))
+        }
+    });
+});
+
 export {
     getProfile,
     updateProfile,
@@ -249,5 +445,9 @@ export {
     addExperience,
     addEducation,
     updateExperience,
-    deleteExperience
+    deleteExperience,
+    updateEducation,
+    deleteEducation,
+    getDashboardStats,
+    getRecommendedJobs
 };

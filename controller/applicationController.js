@@ -1,10 +1,13 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { calculateSkillsMatch } = require('../utils/skillsMatcherUtils.js');
+
 import { ApplicationModel } from "../model/applicationModel.js";
 import { JobModel } from "../model/jobModel.js";
 import { JobSeekerProfileModel } from "../model/jobSeekerProfileModel.js";
-import { calculateSkillsMatch } from "../utils/skillsMatcherUtils.js";
 import { sendEmail } from "../utils/sendEmailUtils.js";
 import { apiSuccessResponse, apiErrorResponse, HTTP_STATUS } from "../utils/apiResponseUtils.js";
-import catchAsync from "../utils/catchAsyncUtils.js";
+import { catchAsync } from "../utils/catchAsyncUtils.js";
 
 export const applyToJob = catchAsync(async (req, res) => {
   const { jobId, coverLetter } = req.body;
