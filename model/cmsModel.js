@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const CMSPageSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true, index: true },

@@ -1,7 +1,7 @@
-import cmsService from "../services/cmsService.js";
-import { catchAsync } from "../utils/catchAsync.js";
-import { apiSuccessResponse, HTTP_STATUS, HTTP_STATUS_MESSAGE } from "../utils/apiResponse.js";
-import { NotFoundException, InternalServerException } from "../utils/ErrorResponse.js";
+import cmsService from "../services/cmsServices.js";
+import { catchAsync } from "../utils/catchAsyncUtils.js";
+import { apiSuccessResponse, HTTP_STATUS, HTTP_STATUS_MESSAGE } from "../utils/apiResponseUtils.js";
+import { NotFoundException, InternalServerException } from "../utils/ErrorResponseUtils.js";
 
 class CMSController {
   createPage = catchAsync(async (req, res) => {

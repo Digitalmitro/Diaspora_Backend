@@ -1,4 +1,4 @@
-import ErrorResponse from "./ErrorResponse.js";
+import ErrorResponse from "./ErrorResponseUtils.js";
 
 export const softDeleteById = async (Model, id, deletedBy = "system") => {
   const document = await Model.findById(id);

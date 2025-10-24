@@ -66,7 +66,7 @@ export const VALID_JOB_TYPES = Object.values(JOB_TYPE);
 export const USER_ROLE = {
   ADMIN: 'admin',
   EMPLOYER: 'employer',
-  JOB_SEEKER: 'jobseeker',
+  JOB_SEEKER: 'seeker',
 };
 
 export const VALID_USER_ROLES = Object.values(USER_ROLE);

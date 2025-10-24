@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const BlogSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },

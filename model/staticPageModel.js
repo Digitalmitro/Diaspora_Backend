@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
 import { UserModel } from "./authModel.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const StaticPageSchema = new mongoose.Schema({
     pageType: {

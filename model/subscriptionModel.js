@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
 import { UserModel } from "./authModel.js";
 import { SubscriptionPlanModel } from "./subscriptionPlanModel.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const SubscriptionSchema = new mongoose.Schema({
   employerId: { type: mongoose.Schema.Types.ObjectId, ref: UserModel.modelName, required: true, index: true },

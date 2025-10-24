@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
 import { JobModel } from "./jobModel.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
-import { VALID_APPLICATION_STATUSES, SKILLS_MATCH_SCORE } from "../validators/application.validator.js";
+import softDeletePlugin from "../plugins/softDelete.js";
+import { VALID_APPLICATION_STATUSES, SKILLS_MATCH_SCORE } from "../validators/applicationValidator.js";
 
 const ApplicationSchema = new mongoose.Schema({
     jobId: { type: mongoose.Schema.Types.ObjectId, ref: JobModel.modelName, required: true },

@@ -1,21 +1,21 @@
 import AuthService from "../services/authServices.js";
 import UserMetadata from "../model/userMetadataModel.js";
 import logger from "../config/logger.js";
-import { catchAsync } from "../utils/catchAsync.js";
-import { apiSuccessResponse, HTTP_STATUS, HTTP_STATUS_MESSAGE } from "../utils/apiResponse.js";
-import { BadRequestException } from "../utils/ErrorResponse.js";
+import { catchAsync } from "../utils/catchAsyncUtils.js";
+import { apiSuccessResponse, apiAuthSuccessResponse, HTTP_STATUS, HTTP_STATUS_MESSAGE } from "../utils/apiResponseUtils.js";
+import { BadRequestException } from "../utils/ErrorResponseUtils.js";
 
 class AuthController {
   register = catchAsync(async (req, res) => {
     const result = await AuthService.register(req.body, req.ip);
     logger.info("User registered successfully", { email: req.body.email, ip: req.ip });
-    apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.CREATED], result, HTTP_STATUS.CREATED);
+    apiAuthSuccessResponse(res, result.message, result, HTTP_STATUS.CREATED);
   });
 
   login = catchAsync(async (req, res) => {
     const result = await AuthService.login(req.body, req.ip);
     logger.info("User logged in successfully", { email: req.body.email, ip: req.ip });
-    apiSuccessResponse(res, HTTP_STATUS_MESSAGE[HTTP_STATUS.OK], result, HTTP_STATUS.OK);
+    apiAuthSuccessResponse(res, result.message, result, HTTP_STATUS.OK);
   });
 
   verifyEmail = catchAsync(async (req, res) => {

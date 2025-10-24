@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
 import { JobSeekerProfileModel } from "./jobSeekerProfileModel.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const ExperienceSchema = new mongoose.Schema({
   jobSeekerId: { type: mongoose.Schema.Types.ObjectId, ref: JobSeekerProfileModel.modelName, required: true, index: true },

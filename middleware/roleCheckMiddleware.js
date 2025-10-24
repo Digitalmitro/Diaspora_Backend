@@ -35,10 +35,10 @@ export const checkRole = (...roles) => {
   };
 };
 
-export const isJobSeeker = checkRole("jobseeker");
+export const isJobSeeker = checkRole("seeker");
 
 export const isEmployer = checkRole("employer");
 
 export const isAdmin = checkRole("admin");
 
-export const isJobSeekerOrEmployer = checkRole("jobseeker", "employer");
+export const isJobSeekerOrEmployer = checkRole("seeker", "employer");

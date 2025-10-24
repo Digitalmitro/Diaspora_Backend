@@ -7,6 +7,7 @@ import connectDb from "./config/db.js";
 import logger from "./config/logger.js";
 import authRoutes from "./routes/authRoutes.js";
 import cmsRoutes from "./routes/cmsRoutes.js";
+import jobseekerRoutes from "./routes/jobseekerRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandlerMiddleware.js";
 import { generalRateLimiter } from "./middleware/rateLimitMiddleware.js";
 import { httpsRedirect, securityHeaders } from "./middleware/securityMiddleware.js";
@@ -51,7 +52,15 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: [
+    "Content-Type", 
+    "Authorization", 
+    "X-Requested-With", 
+    "Cache-Control", 
+    "Pragma", 
+    "Expires"
+  ],
+  exposedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
@@ -67,6 +76,7 @@ app.use(generalRateLimiter);
 
 app.use("/auth", authRoutes);
 app.use("/cms", cmsRoutes);
+app.use("/seeker", jobseekerRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({ 
@@ -75,6 +85,10 @@ app.get("/", (req, res) => {
     version: "1.0.0",
     environment: process.env.NODE_ENV || "development"
   });
+});
+
+app.get("/favicon.ico", (req, res) => {
+  res.status(204).end();
 });
 
 app.use(notFound);

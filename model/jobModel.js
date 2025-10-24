@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const JobSchema = new mongoose.Schema({
     employerId: { type: mongoose.Schema.Types.ObjectId, ref: ModelNames.USER, required: true, index: true },

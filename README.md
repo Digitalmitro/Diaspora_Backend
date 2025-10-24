@@ -200,6 +200,21 @@ Base URL: `/cms`
 
 #### Sign Up
 
+The signup endpoint supports two formats for name input:
+
+**Option 1: Using Full Name (Recommended for frontend)**
+```bash
+curl -X POST http://localhost:5000/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullName": "John Doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!",
+    "role": "seeker"
+  }'
+```
+
+**Option 2: Using First Name and Last Name**
 ```bash
 curl -X POST http://localhost:5000/auth/signup \
   -H "Content-Type: application/json" \
@@ -208,10 +223,11 @@ curl -X POST http://localhost:5000/auth/signup \
     "lastName": "Doe",
     "email": "john@example.com",
     "password": "SecurePass123!",
-    "confirmPassword": "SecurePass123!",
-    "role": "jobseeker"
+    "role": "seeker"
   }'
 ```
+
+**Valid Roles:** `seeker`, `employer` (or `jobseeker` for backward compatibility)
 
 #### Login
 

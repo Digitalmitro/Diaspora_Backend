@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { ModelNames } from "./modelNames.js";
-import softDeletePlugin from "../plugins/softDelete.plugin.js";
+import softDeletePlugin from "../plugins/softDelete.js";
 
 const SubscriptionPlanSchema = new mongoose.Schema({
     name: { type: String, enum: ["basic", "pro", "premium"], required: true, unique: true },

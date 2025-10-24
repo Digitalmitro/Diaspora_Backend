@@ -1,7 +1,7 @@
 import express from "express";
 import cmsController from "../controller/cmsController.js";
-import upload from "../middleware/upload.js";
-import { createPageValidation, updatePageValidation, getPageValidation } from "../validators/cms.validator.js";
+import upload from "../middleware/uploadMiddleware.js";
+import { createPageValidation, updatePageValidation, getPageValidation } from "../validators/cmsValidator.js";
 
 const router = express.Router();
 

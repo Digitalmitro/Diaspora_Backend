@@ -2,7 +2,7 @@ import { Router } from "express";
 import AuthController from "../controller/AuthController.js";
 import { protect, optionalAuth } from "../middleware/authMiddleware.js";
 import { authRateLimiter, strictRateLimiter, } from "../middleware/rateLimitMiddleware.js";
-import { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, verifyEmailValidation, } from "../validators/auth.validator.js";
+import { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation, verifyEmailValidation, } from "../validators/authValidator.js";
 
 const router = Router();
 

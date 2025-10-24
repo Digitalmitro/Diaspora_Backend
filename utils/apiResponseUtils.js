@@ -5,6 +5,29 @@ export const apiSuccessResponse = (res, message, body, status = 200) => {
     body,
   });
 };
+export const apiAuthSuccessResponse = (res, message, data, status = 200) => {
+  const response = {
+    success: true,
+    message,
+  };
+
+  if (data && data.token) {
+    response.token = data.token;
+  }
+  if (data && data.user) {
+    response.user = data.user;
+  }
+
+  const additionalData = { ...data };
+  delete additionalData.token;
+  delete additionalData.user;
+  
+  if (Object.keys(additionalData).length > 0) {
+    response.body = additionalData;
+  }
+
+  return res.status(status).json(response);
+};
 
 export const apiErrorResponse = (res, message, body, status = 400) => {
   return res.status(status).json({

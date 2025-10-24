@@ -1,25 +1,28 @@
 import User from "../model/authModel.js";
 import UserMetadata from "../model/userMetadataModel.js";
+import JobSeekerProfile from "../model/jobSeekerProfileModel.js";
+import EmployerProfile from "../model/employerProfileModel.js";
 import { hashPassword, comparePassword, generateAuthToken } from "../utils/authUtils.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../utils/sendEmailUtils.js";
+import { BadRequestException, UnauthorizedException } from "../utils/ErrorResponseUtils.js";
 import logger from "../config/logger.js";
 import crypto from "crypto";
 
 class AuthService {
-  async register({ firstName, lastName, email, password, role }, ip) {
-    const name = `${firstName} ${lastName}`;
+  async register({ name, fullName, firstName, lastName, email, password, role }, ip) {
+    const userName = name || fullName || (lastName ? `${firstName} ${lastName}` : firstName);
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       logger.warn("Registration failed: User already exists", { email, ip });
-      throw new Error("User already exists with this email");
+      throw new BadRequestException("User already exists with this email");
     }
 
     const hashedPassword = await hashPassword(password);
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const user = await User.create({
-      name,
+      name: userName,
       email,
       password: hashedPassword,
       role,
@@ -31,6 +34,34 @@ class AuthService {
     });
 
     await userMetadata.setVoidVariable('verificationToken', verificationToken);
+
+    if (role === 'seeker') {
+      await JobSeekerProfile.create({
+        userId: user._id,
+        fullName: userName,
+        phone: '',
+        skills: [],
+        education: [],
+        preferredLocations: [],
+        bio: '',
+        profilePicture: null,
+        resumeUrl: null
+      });
+      logger.info("Job seeker profile created", { userId: user._id });
+    } else if (role === 'employer') {
+      await EmployerProfile.create({
+        userId: user._id,
+        companyName: userName,
+        industry: '',
+        website: '',
+        verificationStatus: 'pending',
+        employeeCount: '',
+        description: '',
+        logo: null,
+        verificationDocUrl: null
+      });
+      logger.info("Employer profile created", { userId: user._id });
+    }
 
     try {
       await sendVerificationEmail(email, verificationToken);
@@ -49,9 +80,12 @@ class AuthService {
       role: user.role,
       ip,
     });
+    const token = generateAuthToken(user);
 
     return {
       message: "Registration successful! Please check your email to verify your account.",
+      token,
+      verificationToken,
       user: {
         id: user._id,
         name: user.name,
@@ -66,7 +100,7 @@ class AuthService {
     const user = await User.findOne({ email });
     if (!user) {
       logger.warn("Login failed: User not found", { email, ip });
-      throw new Error("Invalid email or password");
+      throw new UnauthorizedException("Invalid email or password");
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
@@ -76,7 +110,7 @@ class AuthService {
         userId: user._id,
         ip,
       });
-      throw new Error("Invalid email or password");
+      throw new UnauthorizedException("Invalid email or password");
     }
 
     if (!user.isVerified) {
@@ -85,9 +119,7 @@ class AuthService {
         userId: user._id,
         ip,
       });
-      const error = new Error("Please verify your email before logging in");
-      error.statusCode = 403;
-      throw error;
+      throw new UnauthorizedException("Please verify your email before logging in");
     }
 
     if (!user.isActive) {
@@ -96,9 +128,7 @@ class AuthService {
         userId: user._id,
         ip,
       });
-      const error = new Error("Your account has been deactivated");
-      error.statusCode = 403;
-      throw error;
+      throw new UnauthorizedException("Your account has been deactivated");
     }
 
     const token = generateAuthToken(user);
@@ -137,13 +167,13 @@ class AuthService {
 
     if (!userMetadata) {
       logger.warn("Email verification failed: Invalid token", { ip });
-      throw new Error("Invalid or expired verification token");
+      throw new BadRequestException("Invalid or expired verification token");
     }
 
     const user = await User.findById(userMetadata.userId);
     if (!user) {
       logger.warn("Email verification failed: User not found", { ip });
-      throw new Error("Invalid or expired verification token");
+      throw new BadRequestException("Invalid or expired verification token");
     }
 
     if (user.isVerified) {
@@ -214,7 +244,7 @@ class AuthService {
       });
       await userMetadata.deleteVoidVariable('resetPasswordToken');
       await userMetadata.deleteVoidVariable('resetPasswordTokenExpiry');
-      throw new Error("Failed to send reset email");
+      throw new BadRequestException("Failed to send reset email");
     }
 
     return {
@@ -227,7 +257,7 @@ class AuthService {
 
     if (!userMetadata) {
       logger.warn("Reset password failed: Invalid token", { ip });
-      throw new Error("Invalid or expired reset token");
+      throw new BadRequestException("Invalid or expired reset token");
     }
 
     const tokenExpiry = userMetadata.getVoidVariable('resetPasswordTokenExpiry');
@@ -235,13 +265,13 @@ class AuthService {
       logger.warn("Reset password failed: Token expired", { ip });
       await userMetadata.deleteVoidVariable('resetPasswordToken');
       await userMetadata.deleteVoidVariable('resetPasswordTokenExpiry');
-      throw new Error("Invalid or expired reset token");
+      throw new BadRequestException("Invalid or expired reset token");
     }
 
     const user = await User.findById(userMetadata.userId);
     if (!user) {
       logger.warn("Reset password failed: User not found", { ip });
-      throw new Error("Invalid or expired reset token");
+      throw new BadRequestException("Invalid or expired reset token");
     }
 
     const hashedPassword = await hashPassword(password);

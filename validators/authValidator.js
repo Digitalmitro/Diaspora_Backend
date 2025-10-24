@@ -13,28 +13,29 @@ export const handleValidationErrors = (req, res, next) => {
 };
 
 export const registerValidation = [
-  body("firstName")
+  body("name")
+    .optional()
     .trim()
     .notEmpty()
-    .withMessage("First name is required")
-    .isLength({ min: AUTH.NAME_MIN_LENGTH, max: AUTH.NAME_MAX_LENGTH })
-    .withMessage(`First name must be between ${AUTH.NAME_MIN_LENGTH} and ${AUTH.NAME_MAX_LENGTH} characters`)
+    .withMessage("Name is required")
+    .bail()
+    .isLength({ min: AUTH.NAME_MIN_LENGTH, max: AUTH.NAME_MAX_LENGTH * 2 })
+    .withMessage(`Name must be between ${AUTH.NAME_MIN_LENGTH} and ${AUTH.NAME_MAX_LENGTH * 2} characters`)
+    .bail()
     .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("First name can only contain letters"),
-
-  body("lastName")
-    .trim()
-    .notEmpty()
-    .withMessage("Last name is required")
-    .isLength({ min: AUTH.NAME_MIN_LENGTH, max: AUTH.NAME_MAX_LENGTH })
-    .withMessage(`Last name must be between ${AUTH.NAME_MIN_LENGTH} and ${AUTH.NAME_MAX_LENGTH} characters`)
-    .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("Last name can only contain letters"),
+    .withMessage("Name can only contain letters and spaces")
+    .customSanitizer((value, { req }) => {
+      if (value && !req.body.fullName) {
+        req.body.fullName = value;
+      }
+      return value;
+    }),
 
   body("email")
     .trim()
     .notEmpty()
     .withMessage("Email is required")
+    .bail()
     .isEmail()
     .withMessage("Please provide a valid email address")
     .normalizeEmail(),
@@ -42,37 +43,40 @@ export const registerValidation = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .isLength({ min: AUTH.PASSWORD_MIN_LENGTH })
     .withMessage(`Password must be at least ${AUTH.PASSWORD_MIN_LENGTH} characters long`)
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .bail()
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/~`])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/~`]+$/)
     .withMessage("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
 
-  body("confirmPassword")
-    .notEmpty()
-    .withMessage("Please confirm your password")
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
-
   body("role")
+    .trim()
     .notEmpty()
     .withMessage("Role is required")
+    .bail()
+    .toLowerCase()
     .custom((value, { req }) => {
       const allowedRoles = [USER_ROLE.JOB_SEEKER, USER_ROLE.EMPLOYER];
       if (req.user && req.user.role === USER_ROLE.ADMIN) {
         allowedRoles.push(USER_ROLE.ADMIN);
       }
+      const roleMapping = {
+        'seeker': USER_ROLE.JOB_SEEKER,
+        'employer': USER_ROLE.EMPLOYER,
+        'admin': USER_ROLE.ADMIN,
+      };
 
-      if (!allowedRoles.includes(value)) {
+      const normalizedRole = roleMapping[value.toLowerCase()] || value;
+
+      if (!allowedRoles.includes(normalizedRole)) {
         throw new Error(
           req.user && req.user.role === USER_ROLE.ADMIN
-            ? `Role must be ${USER_ROLE.JOB_SEEKER}, ${USER_ROLE.EMPLOYER}, or ${USER_ROLE.ADMIN}`
-            : `Role must be either ${USER_ROLE.JOB_SEEKER} or ${USER_ROLE.EMPLOYER}`
+            ? `Role must be 'seeker', 'employer', or 'admin'`
+            : `Role must be either 'seeker' or 'employer'`
         );
       }
+      req.body.role = normalizedRole;
       return true;
     }),
 
@@ -84,6 +88,7 @@ export const loginValidation = [
     .trim()
     .notEmpty()
     .withMessage("Email is required")
+    .bail()
     .isEmail()
     .withMessage("Please provide a valid email address")
     .normalizeEmail(),
@@ -100,6 +105,7 @@ export const forgotPasswordValidation = [
     .trim()
     .notEmpty()
     .withMessage("Email is required")
+    .bail()
     .isEmail()
     .withMessage("Please provide a valid email address")
     .normalizeEmail(),
@@ -109,32 +115,25 @@ export const forgotPasswordValidation = [
 
 export const resetPasswordValidation = [
   body("token")
+    .trim()
     .notEmpty()
     .withMessage("Reset token is required"),
 
   body("password")
     .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .isLength({ min: AUTH.PASSWORD_MIN_LENGTH })
     .withMessage(`Password must be at least ${AUTH.PASSWORD_MIN_LENGTH} characters long`)
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .bail()
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/~`])[A-Za-z\d@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/~`]+$/)
     .withMessage("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
-
-  body("confirmPassword")
-    .notEmpty()
-    .withMessage("Please confirm your password")
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords do not match");
-      }
-      return true;
-    }),
-
-  handleValidationErrors,
+handleValidationErrors,
 ];
 
 export const verifyEmailValidation = [
   body("token")
+    .trim()
     .notEmpty()
     .withMessage("Verification token is required"),
 

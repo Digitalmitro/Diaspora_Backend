@@ -1,4 +1,4 @@
-import { NotFoundException } from "../utils/ErrorResponse.js";
+import { NotFoundException } from "../utils/ErrorResponseUtils.js";
 import logger from "../config/logger.js";
 
 export const notFound = (req, res, next) => {
@@ -6,22 +6,22 @@ export const notFound = (req, res, next) => {
 };
 
 export const errorHandler = (err, req, res, next) => {
-  logger.error("Error occurred", {
-    message: err.message,
-    statusCode: err.statusCode || err.status || 500,
-    stack: err.stack,
-    path: req.path,
-    method: req.method,
-    ip: req.ip,
-  });
-
   const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || "Internal Server Error";
+  if (statusCode !== 404) {
+    console.error(err.stack);
+    
+    logger.error("Error occurred", {
+      message: err.message,
+      statusCode: statusCode,
+      stack: err.stack,
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+    });
+  }
 
   res.status(statusCode).json({
     success: false,
-    message,
-    status: statusCode,
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+    message: err.message || "Internal Server Error",
   });
 };
